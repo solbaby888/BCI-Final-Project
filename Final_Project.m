@@ -6,6 +6,7 @@ Table of Contents (By Section):
 % Import Data
 % Check for 60 Hz noise and filter
 % Apply 60 Hz filter
+% Pull testing ECOG;
 % Check fft filter
 
 %}
@@ -142,6 +143,7 @@ hold on;
 plot(ECoG_Sub1_Chan1),....
 legend('Filtered', 'Raw')
 
+%% 
 %% Looking at Flexion Data
 nr        = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub1_2.data(1).sampleRate);
