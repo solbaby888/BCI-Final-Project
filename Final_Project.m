@@ -2,12 +2,13 @@
 
 %{ 
 
-Table of Contents (By Section):
-% Import Data
-% Check for 60 Hz noise and filter
-% Apply 60 Hz filter
-% Pull testing ECOG;
-% Check fft filter
+    Table of Contents (By Section):
+    % Import Data
+    % Check for 60 Hz noise and filter
+    % Apply 60 Hz filter
+    % Check fft filter
+    % Checkpt 1
+    % Looking at Flexion Data
 
 %}
 
@@ -34,7 +35,7 @@ nr_2        = ceil((sesh_sub2_1.data(1).rawChannels(1).get_tsdetails.getEndTime)
 sesh_sub3_1 = IEEGSession('I521_A0014_D001', 'solbaby888', 'sol_ieeglogin.bin');
 sesh_sub3_2 = IEEGSession('I521_A0014_D002', 'solbaby888', 'sol_ieeglogin.bin');
 sesh_sub3_3 = IEEGSession('I521_A0014_D003', 'solbaby888', 'sol_ieeglogin.bin');
-nr_3        = ceil((sesh_sub2_3data(1).rawChannels(1).get_tsdetails.getEndTime)/...
+nr_3        = ceil((sesh_sub2_3.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub2_1.data(1).sampleRate);
 
 %{
@@ -113,7 +114,7 @@ BandPassSpecObj = ...
    fdesign.bandpass('N,Fst1,Fp1,Fp2,Fst2', ...
 		N_order, F_stop1, F_pass1, F_pass2, F_stop2, fs_Sub1)
    Hd = design(BandPassSpecObj,'equiripple');
-   ECoG_Sub1_Chan1_filt_2 = filtfilt(Hd.Numerator,1,ECoG_Sub1_Chan1_filt);
+   ECoG_Sub1_Chan1_filt_2 = filtfilt(Hd.Numerator,1,ECoG_Sub1_Chan1_filt_1);
 
 %{
     TL_comment: Not sure if this is the best way to filter the data. Should check if
@@ -143,7 +144,45 @@ hold on;
 plot(ECoG_Sub1_Chan1),....
 legend('Filtered', 'Raw')
 
-%% 
+%% Checkpt 1
+%{ 
+    window of 100 ms; overlap of 50 ms
+%}
+
+% ====== Function handle to calculate number of windows ================= %
+    NumWins = @(xLen, fs, winLen, winDisp) 1+floor((xLen-fs*winLen)/(winDisp*fs));  
+    % winLen and winDisp are in secs, xLen are in samples
+% ======================================================================= %
+
+% Number of Windows for Subj1
+window_time = 100*10^-3;                                 % (secs)
+overlap     = 50*10^-3;                                  % (secs)
+windowLen   = window_time * fs_Sub1;                     % number of pts per window 
+L           = length(ECoG_Sub1_Chan1_filt_2);
+NoW         = NumWins(L, fs_Sub1, window_time, overlap); % caclulate number of windows; not sure if we need this atm
+
+% ======= Features ====================================================== %
+    % Feature 1 - Line Length
+    LLFn  = @(x) sum(abs(diff(x))); 
+    % Feature 2 - Area
+    AreaFn = @(x) sum(abs(x));
+    % Feature 3 - Energy
+    EnergyFn = @(x) sum(x.^2);
+    % Feature 4 - Amplitude (maybe?)
+    % Feature 5 - FFT (maybe?)
+    % Feature 6 - ???
+% ======================================================================= %
+
+% Calculate Features over windows
+Sub1_LL     = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, LLFn);
+Sub1_Area   = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
+Sub1_Energy = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
+
+Feat_Mat(:,1) = Sub1_LL;
+Feat_Mat(:,2) = Sub1_Area;
+Feat_Mat(:,3) = Sub1_Energy;
+% ofcourse will have to add more columns as we choose what features to use
+
 %% Looking at Flexion Data
 nr        = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub1_2.data(1).sampleRate);
