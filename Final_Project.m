@@ -147,6 +147,10 @@ legend('Filtered', 'Raw')
 %% Checkpt 1
 %{ 
     window of 100 ms; overlap of 50 ms
+
+    Some comments: I accidently decided to calculate some other features.
+    We can remove them for now for the first checkpoint. Stupid extra work.
+    
 %}
 
 % ====== Function handle to calculate number of windows ================= %
@@ -163,25 +167,64 @@ NoW         = NumWins(L, fs_Sub1, window_time, overlap); % caclulate number of w
 
 % ======= Features ====================================================== %
     % Feature 1 - Line Length
-    LLFn  = @(x) sum(abs(diff(x))); 
+    %LLFn  = @(x) sum(abs(diff(x))); 
     % Feature 2 - Area
-    AreaFn = @(x) sum(abs(x));
+    %AreaFn = @(x) sum(abs(x));
     % Feature 3 - Energy
-    EnergyFn = @(x) sum(x.^2);
-    % Feature 4 - Amplitude (maybe?)
-    % Feature 5 - FFT (maybe?)
-    % Feature 6 - ???
+    %EnergyFn = @(x) sum(x.^2);
+    % Feature 5 - FFT 5-15 Hz
+    % Feature 6 - FFT 20-25 Hz
+    
 % ======================================================================= %
 
 % Calculate Features over windows
-Sub1_LL     = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, LLFn);
-Sub1_Area   = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
-Sub1_Energy = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
+%Sub1_LL     = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, LLFn);
+%Sub1_Area   = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
+%Sub1_Energy = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
+%fft_handle  = @FFT_featFn;
+%Sub1_FFT    = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, fft_handle);
+[s, w, t]    = spectrogram(ECoG_Sub1_Chan1_filt_2, window_time*fs_Sub1, overlap*fs_Sub1);
 
 Feat_Mat(:,1) = Sub1_LL;
 Feat_Mat(:,2) = Sub1_Area;
 Feat_Mat(:,3) = Sub1_Energy;
 % ofcourse will have to add more columns as we choose what features to use
+
+% Downsampling dataglove traces
+nr                  = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
+                        1e6*sesh_sub1_2.data(1).sampleRate);
+Glove_Sub1_Chan1    = sesh_sub1_2.data(1).getvalues(1:nr, 1:5);
+SR_dataglove        = sesh_sub1_2.data(1).sampleRate;
+Glove_Sub1_Chan1_ds = decimate(Glove_Sub1_Chan1,  50/(SR_dataglove*10^-3));
+
+% Linear Regression Prediction
+numoffeat       = 6;
+numofprev_win   = 3;
+noofchan        = size(sesh_sub1_1.data.rawChannels, 2);     % number of channels
+n_of_R          = NoW - numofprev_win + 1;                   % number of windows for regression
+p_of_R          = noofchan*numoffeat * numofprev_win  + 1;            
+R_mat           = zeros(n_of_R, p_of_R);                     % six features per window
+
+for i = 1:n_of_R;
+    curr_pt = 1 + curr_pt;
+        for j = 1:noofchan;
+            R_idx1 = (j-1)*20 + 1;
+            R_idx2 = R_idx1 + 19;
+            R_mat(i, R_idx1:R_idx2) = Feat_Mat(curr_pt - numoffeat * numofprev_win:curr_pt - 1,j)';
+        end;
+end; 
+
+% finger 1
+f_1 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_1(first_epoch:end));
+% finger 2
+f_2 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_2(first_epoch:end));
+% finger 3
+f_3 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_3(first_epoch:end));
+% finger 4
+f_4 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_4(first_epoch:end));
+% finger 5
+f_5 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_5(first_epoch:end));
+
 
 %% Looking at Flexion Data
 nr        = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...

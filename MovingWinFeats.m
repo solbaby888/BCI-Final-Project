@@ -22,14 +22,14 @@ first     = 1;
 last      = win;
 
 % intializing
-feat = zeros(NoW, 1);
+feat = [];
 
 % calculate LL for each sliding window and store in array
 for i = 1:NoW
-    SW      = x(first: last); % sliding window
-    feat(i) = featFn(SW);     % calculate feature
-    first   = first + win_d;
-    last    = last  + win_d;
+    SW         = x(first: last); % sliding window
+    feat(i,:)    = featFn(SW, fs);     % calculate feature
+    first      = first + win_d;
+    last       = last  + win_d;
 end;
     
     
