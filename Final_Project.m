@@ -163,7 +163,7 @@ window_time = 100*10^-3;                                 % (secs)
 overlap     = 50*10^-3;                                  % (secs)
 windowLen   = window_time * fs_Sub1;                     % number of pts per window 
 L           = length(ECoG_Sub1_Chan1_filt_2);
-NoW         = NumWins(L, fs_Sub1, window_time, overlap); % caclulate number of windows; not sure if we need this atm
+NoW         = NumWins(L, fs_Sub1, window_time, overlap); 
 
 % ======= Features ====================================================== %
     % Feature 1 - Line Length
@@ -183,19 +183,28 @@ NoW         = NumWins(L, fs_Sub1, window_time, overlap); % caclulate number of w
 %Sub1_Energy = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, AreaFn);
 %fft_handle  = @FFT_featFn;
 %Sub1_FFT    = MovingWinFeats(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, overlap, fft_handle);
+
 [s, w, t]    = spectrogram(ECoG_Sub1_Chan1_filt_2, window_time*fs_Sub1, overlap*fs_Sub1);
 
-Feat_Mat(:,1) = Sub1_LL;
-Feat_Mat(:,2) = Sub1_Area;
-Feat_Mat(:,3) = Sub1_Energy;
+%Feat_Mat(:,1) = Sub1_LL;
+%Feat_Mat(:,2) = Sub1_Area;
+%Feat_Mat(:,3) = Sub1_Energy;
+
+Feat_Mat = []; % WARNING need to fix when we know how to calculate features
 % ofcourse will have to add more columns as we choose what features to use
 
-% Downsampling dataglove traces
+% Downsampling dataglove traces                 
+%# Cell array glove positions (1:5)                   
 nr                  = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                         1e6*sesh_sub1_2.data(1).sampleRate);
-Glove_Sub1_Chan1    = sesh_sub1_2.data(1).getvalues(1:nr, 1:5);
+for i = 1:5;
+    Glovedata_Sub1{i} = sesh_sub1_2.data(1).getvalues(1:nr, i);
+end;
+
 SR_dataglove        = sesh_sub1_2.data(1).sampleRate;
-Glove_Sub1_Chan1_ds = decimate(Glove_Sub1_Chan1,  50/(SR_dataglove*10^-3));
+for i = 1:5;
+    decimate(Glovedata_Sub1{i},  50/(SR_dataglove*10^-3));
+end;
 
 % Linear Regression Prediction
 numoffeat       = 6;
@@ -214,16 +223,16 @@ for i = 1:n_of_R;
         end;
 end; 
 
-% finger 1
-f_1 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_1(first_epoch:end));
-% finger 2
-f_2 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_2(first_epoch:end));
-% finger 3
-f_3 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_3(first_epoch:end));
-% finger 4
-f_4 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_4(first_epoch:end));
-% finger 5
-f_5 = mldivide(R_mat'*R_mat, R_mat' * fingerpos_5(first_epoch:end));
+% Adding the first columns of ones
+R_ones     = ones(length(data_count_norm),1);
+R_mat      = [R_first, R_mat];
+
+% Weights and prediction for each finger
+first_epoch = 1; % WARNING: prob need to change
+for i = 1:5
+    f{i} = mldivide(R_mat'*R_mat, R_mat' * Glovedata_Sub1{i}(first_epoch:end));
+    pred{i} = R_mat*f{i};
+end
 
 
 %% Looking at Flexion Data
