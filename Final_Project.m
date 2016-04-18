@@ -211,14 +211,14 @@ numoffeat       = 6;
 numofprev_win   = 3;
 noofchan        = size(sesh_sub1_1.data.rawChannels, 2);     % number of channels
 n_of_R          = NoW - numofprev_win + 1;                   % number of windows for regression
-p_of_R          = noofchan*numoffeat * numofprev_win  + 1;            
+p_of_R          = noofchan * numoffeat * numofprev_win  + 1;            
 R_mat           = zeros(n_of_R, p_of_R);                     % six features per window
 
 for i = 1:n_of_R;
     curr_pt = 1 + curr_pt;
         for j = 1:noofchan;
-            R_idx1 = (j-1)*20 + 1;
-            R_idx2 = R_idx1 + 19;
+            R_idx1 = (j-1)* numoffeat * numofprev_win + 1;
+            R_idx2 = R_idx1 + numoffeat * numofprev_win - 1;
             R_mat(i, R_idx1:R_idx2) = Feat_Mat(curr_pt - numoffeat * numofprev_win:curr_pt - 1,j)';
         end;
 end; 
