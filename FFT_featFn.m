@@ -1,6 +1,8 @@
 function feat = FFT_featFn(signal, fs, window, overlap);
 
-[s w t] = spectrogram(signal, window*fs, overlap*fs, [], fs, 'yaxis');
+for i = 1:length(signal);
+[s w t] = spectrogram(signal{i}, window*fs, overlap*fs, [], fs, 'yaxis');
+
 
 tmp = abs(w-5);
 [idx1 idx1] = min(tmp); %index of closest value
@@ -32,4 +34,5 @@ tmp = abs(w-175);
 [idx2 idx2] = min(tmp); %index of closest value
 FFT_160_175 = mean(s(idx1:idx2, :),1);
 
-feat = [FFT_5_15' FFT_20_25' FFT_75_115' FFT_125_160' FFT_160_175'];
+feat{:,i} = [FFT_5_15' FFT_20_25' FFT_75_115' FFT_125_160' FFT_160_175'];
+end
