@@ -17,16 +17,16 @@
 %}
 
 % Subject 1
-sesh_sub1_1 = IEEGSession('I521_A0012_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'solbaby888', 'sol_ieeglogin.bin');
+sesh_sub1_1 = IEEGSession('I521_A0012_D001', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'karanm', 'kar_ieeglogin.bin');
 nr_1        = ceil((sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub1_1.data(1).sampleRate);
 
 % Testing with all channels of Subject 1
 no_of_channels_ECOG = size(sesh_sub1_1.data(1).rawChannels, 2);
 for i = 1:no_of_channels_ECOG;
-    ECoG_Sub1_Chan{i} = sesh_sub1_1.data(1).getvalues(1:nr_1, i);   
+    ECoG_Sub1_Chan{:, i} = sesh_sub1_1.data(1).getvalues(1:nr_1, i);   
 end;
 
 % Sampling Rate
@@ -58,7 +58,7 @@ a = poly( poles );  % Get autoregressive filter coefficients
 
 %#filter signal
 for i = 1:no_of_channels_ECOG;
-    ECoG_Sub1_Chan_filt{i} = filtfilt(b, a, ECoG_Sub1_Chan);  
+    ECoG_Sub1_Chan_filt{i} = filtfilt(b, a, ECoG_Sub1_Chan{i});  
 end;
 
 % Bandpass filter
@@ -72,9 +72,12 @@ N_order = 100;
 BandPassSpecObj = ...
    fdesign.bandpass('N,Fst1,Fp1,Fp2,Fst2', ...
 		N_order, F_stop1, F_pass1, F_pass2, F_stop2, fs_Sub1)
+    
    Hd = design(BandPassSpecObj,'equiripple');
-   ECoG_Sub1_Chan1_filt_2 = filtfilt(Hd.Numerator,1,ECoG_Sub1_Chan1_filt_1);
-
+   
+for i = 1:no_of_channels_ECOG;
+   ECoG_Sub1_Chan1_filt_2{i} = filtfilt(Hd.Numerator,1,ECoG_Sub1_Chan_filt{i});
+end;
 %{
     TL_comment: Not sure if this is the best way to filter the data. Should check if
     filtering between .15 and 200 is right. Need to check if we should only
@@ -99,7 +102,7 @@ BandPassSpecObj = ...
 window_time = 100*10^-3;                                 % (secs)
 overlap     = 50*10^-3;                                  % (secs)
 windowLen   = window_time * fs_Sub1;                     % number of pts per window 
-L           = length(ECoG_Sub1_Chan1_filt_2);
+L           = length(ECoG_Sub1_Chan1_filt_2{1});
 NoW         = NumWins(L, fs_Sub1, window_time, overlap); 
 
 % Calculate frequency domain avg power features over windows
@@ -108,12 +111,18 @@ Freq_domain_Feat     = FFT_featFn(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, 
 
 % Calculate time domain avg voltage 
 kernnel = repmat(1/(window_time*fs_Sub1), 1, window_time*fs_Sub1);
-time_avg_volt = conv(ECoG_Sub1_Chan1_filt_2, kernnel, 'valid');
-time_avg_volt = time_avg_volt(1:overlap*fs_Sub1:end);                               % Recall: overlap is 50 ms. 
+
+for i=1:no_of_channels_ECOG;
+time_avg_volt_temp = conv(ECoG_Sub1_Chan1_filt_2{1,i}, kernnel, 'valid');
+time_avg_volt = time_avg_volt_temp(1:overlap*fs_Sub1:end);  
+time_avg_volt(:,i)=time_avg_volt;
+end
+% Recall: overlap is 50 ms. 
 
 % Feature Matrix
-Feat_Mat = [time_avg_volt Freq_domain_Feat];              % time window X no. of feature
-
+for i=1:no_of_channels_ECOG
+Feat_Mat{i} = [time_avg_volt(:,i) Freq_domain_Feat{1,i}];    % time window X no. of feature
+end
 % Downsampling dataglove traces                 
 %# Cell array glove positions (1:5)                   
 nr                  = ceil((sesh_sub1_2.data(1).rawChannels(1).get_tsdetails.getEndTime)/...

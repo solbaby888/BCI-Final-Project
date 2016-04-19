@@ -9,6 +9,36 @@
 
 %}
 
+% %% Import Data
+% %{
+%     Each subject has ECoG data set, a glove data set, and testing data set.
+%     
+% %}
+% 
+% % Subject 1
+% sesh_sub1_1 = IEEGSession('I521_A0012_D001', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'solbaby888', 'sol_ieeglogin.bin');
+% nr_1        = ceil((sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
+%                 1e6*sesh_sub1_1.data(1).sampleRate);
+% % Subject 2
+% sesh_sub2_1 = IEEGSession('I521_A0013_D001', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub2_2 = IEEGSession('I521_A0013_D002', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub2_3 = IEEGSession('I521_A0013_D003', 'solbaby888', 'sol_ieeglogin.bin');
+% nr_2        = ceil((sesh_sub2_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
+%                 1e6*sesh_sub2_1.data(1).sampleRate);
+% 
+% % Subject 3
+% sesh_sub3_1 = IEEGSession('I521_A0014_D001', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub3_2 = IEEGSession('I521_A0014_D002', 'solbaby888', 'sol_ieeglogin.bin');
+% sesh_sub3_3 = IEEGSession('I521_A0014_D003', 'solbaby888', 'sol_ieeglogin.bin');
+% nr_3        = ceil((sesh_sub2_3.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
+%                 1e6*sesh_sub2_1.data(1).sampleRate);
+% 
+% % Testing with Channel 1 of Subject 1
+% ECoG_Sub1_Chan1 = sesh_sub1_1.data(1).getvalues(1:nr_1, 1);
+% fs_Sub1         = sesh_sub1_1.data(1).sampleRate;
+
 %% Import Data
 %{
     Each subject has ECoG data set, a glove data set, and testing data set.
@@ -16,29 +46,28 @@
 %}
 
 % Subject 1
-sesh_sub1_1 = IEEGSession('I521_A0012_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'solbaby888', 'sol_ieeglogin.bin');
+sesh_sub1_1 = IEEGSession('I521_A0012_D001', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'karanm', 'kar_ieeglogin.bin');
 nr_1        = ceil((sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub1_1.data(1).sampleRate);
 % Subject 2
-sesh_sub2_1 = IEEGSession('I521_A0013_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub2_2 = IEEGSession('I521_A0013_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub2_3 = IEEGSession('I521_A0013_D003', 'solbaby888', 'sol_ieeglogin.bin');
+sesh_sub2_1 = IEEGSession('I521_A0013_D001', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub2_2 = IEEGSession('I521_A0013_D002', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub2_3 = IEEGSession('I521_A0013_D003', 'karanm', 'kar_ieeglogin.bin');
 nr_2        = ceil((sesh_sub2_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub2_1.data(1).sampleRate);
 
 % Subject 3
-sesh_sub3_1 = IEEGSession('I521_A0014_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub3_2 = IEEGSession('I521_A0014_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub3_3 = IEEGSession('I521_A0014_D003', 'solbaby888', 'sol_ieeglogin.bin');
+sesh_sub3_1 = IEEGSession('I521_A0014_D001', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub3_2 = IEEGSession('I521_A0014_D002', 'karanm', 'kar_ieeglogin.bin');
+sesh_sub3_3 = IEEGSession('I521_A0014_D003', 'karanm', 'kar_ieeglogin.bin');
 nr_3        = ceil((sesh_sub2_3.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub2_1.data(1).sampleRate);
 
 % Testing with Channel 1 of Subject 1
 ECoG_Sub1_Chan1 = sesh_sub1_1.data(1).getvalues(1:nr_1, 1);
 fs_Sub1         = sesh_sub1_1.data(1).sampleRate;
-
 %% Apply 60 Hz filter and Bandpass filter
 %{
     Will eventually have to save as a function to run on all channels
