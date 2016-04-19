@@ -140,23 +140,23 @@ end;
 numoffeat       = 6;
 numofprev_win   = 3;
 noofchan        = size(sesh_sub1_1.data.rawChannels, 2);     % number of channels
-n_of_R          = NoW - numofprev_win + 1;                   % number of windows for regression
-p_of_R          = noofchan * numoffeat * numofprev_win  + 1;            
+n_of_R          = NoW - numofprev_win;                       % number of windows for regression
+p_of_R          = noofchan * numoffeat * numofprev_win;            
 R_mat           = zeros(n_of_R, p_of_R);                     % six features per window
-curr_pt         = numoffeat * numofprev_win;
+curr_pt         = 3;
 
 for i = 1:n_of_R;
-    curr_pt = 1 + curr_pt;
+        curr_pt = 1 + curr_pt;
         for j = 1:noofchan;
             R_idx1 = (j-1)* numoffeat * numofprev_win + 1;
             R_idx2 = R_idx1 + numoffeat * numofprev_win - 1;
-            R_mat(i, R_idx1:R_idx2) = Feat_Mat(curr_pt - numoffeat * numofprev_win:curr_pt - 1, j)';
+            R_mat(i, R_idx1:R_idx2) = reshape(Feat_Mat{j}(curr_pt - 3:curr_pt - 1, :)', [1, 18]);
         end;
 end; 
 
 % Adding the first columns of ones
-R_ones     = ones(length(data_count_norm),1);
-R_mat      = [R_first, R_mat];
+R_ones     = ones(length(R_mat),1);
+R_mat      = [R_ones R_mat];
 
 % Weights and prediction for each finger
 first_epoch = 1; % WARNING: prob need to change
