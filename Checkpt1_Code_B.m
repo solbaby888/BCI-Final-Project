@@ -1,7 +1,8 @@
-% Checkpoint 1
+    % Checkpoint 1
 
 %{ 
-
+    % Working only with Subject 1 but with all the channels of subject 1
+    
     Table of Contents (By Section):
     % Import Data
     % Apply 60 Hz filter
@@ -21,23 +22,15 @@ sesh_sub1_2 = IEEGSession('I521_A0012_D002', 'solbaby888', 'sol_ieeglogin.bin');
 sesh_sub1_3 = IEEGSession('I521_A0012_D003', 'solbaby888', 'sol_ieeglogin.bin');
 nr_1        = ceil((sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
                 1e6*sesh_sub1_1.data(1).sampleRate);
-% Subject 2
-sesh_sub2_1 = IEEGSession('I521_A0013_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub2_2 = IEEGSession('I521_A0013_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub2_3 = IEEGSession('I521_A0013_D003', 'solbaby888', 'sol_ieeglogin.bin');
-nr_2        = ceil((sesh_sub2_1.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
-                1e6*sesh_sub2_1.data(1).sampleRate);
 
-% Subject 3
-sesh_sub3_1 = IEEGSession('I521_A0014_D001', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub3_2 = IEEGSession('I521_A0014_D002', 'solbaby888', 'sol_ieeglogin.bin');
-sesh_sub3_3 = IEEGSession('I521_A0014_D003', 'solbaby888', 'sol_ieeglogin.bin');
-nr_3        = ceil((sesh_sub2_3.data(1).rawChannels(1).get_tsdetails.getEndTime)/...
-                1e6*sesh_sub2_1.data(1).sampleRate);
+% Testing with all channels of Subject 1
+no_of_channels_ECOG = size(sesh_sub1_1.data(1).rawChannels, 2);
+for i = 1:no_of_channels_ECOG;
+    ECoG_Sub1_Chan{i} = sesh_sub1_1.data(1).getvalues(1:nr_1, i);   
+end;
 
-% Testing with Channel 1 of Subject 1
-ECoG_Sub1_Chan1 = sesh_sub1_1.data(1).getvalues(1:nr_1, 1);
-fs_Sub1         = sesh_sub1_1.data(1).sampleRate;
+% Sampling Rate
+fs_Sub1 = sesh_sub1_1.data(1).sampleRate;
 
 %% Apply 60 Hz filter and Bandpass filter
 %{
@@ -63,9 +56,10 @@ zplane(zeross.', poles.');
 b = poly( zeross ); % Get moving average filter coefficients
 a = poly( poles );  % Get autoregressive filter coefficients
 
-%#filter signal x
-ECoG_Sub1_Chan1_filt_1 = filtfilt(b, a, ECoG_Sub1_Chan1);
-
+%#filter signal
+for i = 1:no_of_channels_ECOG;
+    ECoG_Sub1_Chan_filt{i} = filtfilt(b, a, ECoG_Sub1_Chan);  
+end;
 
 % Bandpass filter
 A_stop1 = 60;		% Attenuation in the first stopband = 60 dB
