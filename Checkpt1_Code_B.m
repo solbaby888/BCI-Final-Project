@@ -193,20 +193,20 @@ for i = 1:5
 end
 
 
-% Might have to write a for loop to upsample the prediction
-
-durationInUSec = sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getDuration;
-
-
-time = 1:1/fs_Sub1:310000;
-time = decimate(time, 50);
-time = time(2:end);
-
-for i=1:5
-pred_UpSamp(i,:) = spline(time, pred{i});
-end
-
-Testing_Correlation = corr(Glovedata_Sub1_ds, pred_UpSamp);
+% % Might have to write a for loop to upsample the prediction
+% 
+% durationInUSec = sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getDuration;
+% 
+% 
+% time = 1:1/fs_Sub1:310000;
+% time = decimate(time, 50);
+% time = time(2:end);
+% 
+% for i=1:5
+% pred_UpSamp(i,:) = spline(time, pred{i});
+% end
+% 
+% Testing_Correlation = corr(Glovedata_Sub1_ds, pred_UpSamp);
 
 %%
 
@@ -219,13 +219,23 @@ Testing_Correlation = corr(Glovedata_Sub1_ds, pred_UpSamp);
     x = (1:length(pred{1}));
     xx = (dt:dt:6199);
     
-    pred_upsample = zeros(310000,5);
+   % pred_upsample = zeros(310000,5);
     
     for i = 1:5
 
-        pred_upsample(i,:) = spline(x,... 
-            [pred{i}(1,1) pred{i}(:,1) pred{i}(end,1)], xx);
+        pred_upsample(:,i) = spline(x,pred{i}, xx);
 
     end
    
+    pred_upsample_pad=zeros(50,5);
+    pred_final=zeros(nr,5);
+    pred_final(1:50,:)=pred_upsample_pad;
+    pred_final(51:end,:)=pred_upsample;
     
+    for i = 1:5
+
+       Glovedata_mat_Sub1(:,i) = Glovedata_Sub1{i};
+
+    end
+    
+    Testing_Correlation = corrcoef(Glovedata_mat_Sub1, pred_final);
