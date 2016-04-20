@@ -121,7 +121,7 @@ end
 
 % Feature Matrix
 for i=1:no_of_channels_ECOG
-Feat_Mat{i} = [time_avg_volt(:,i) Freq_domain_Feat{1,i}];    % time window X no. of feature
+    Feat_Mat{i} = [time_avg_volt(:,i) Freq_domain_Feat{1,i}];    % time window X no. of feature
 end
 % Downsampling dataglove traces                 
 %# Cell array glove positions (1:5)                   
