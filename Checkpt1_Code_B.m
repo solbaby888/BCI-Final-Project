@@ -113,15 +113,14 @@ Freq_domain_Feat     = FFT_featFn(ECoG_Sub1_Chan1_filt_2, fs_Sub1, window_time, 
 kernnel = repmat(1/(window_time*fs_Sub1), 1, window_time*fs_Sub1);
 
 for i=1:no_of_channels_ECOG;
-time_avg_volt_temp = conv(ECoG_Sub1_Chan1_filt_2{1,i}, kernnel, 'valid');
-time_avg_volt = time_avg_volt_temp(1:overlap*fs_Sub1:end);  
-time_avg_volt(:,i)=time_avg_volt;
+    time_avg_volt_temp = conv(ECoG_Sub1_Chan1_filt_2{1,i}, kernnel, 'valid');
+    time_avg_volt(:, i) = time_avg_volt_temp(1:overlap*fs_Sub1:end);  
 end
 % Recall: overlap is 50 ms. 
 
 % Feature Matrix
 for i=1:no_of_channels_ECOG
-Feat_Mat{i} = [time_avg_volt(:,i) Freq_domain_Feat{1,i}];    % time window X no. of feature
+    Feat_Mat{i} = [time_avg_volt(:,i) Freq_domain_Feat{1,i}];    % time window X no. of feature
 end
 % Downsampling dataglove traces                 
 %# Cell array glove positions (1:5)                   
@@ -160,20 +159,73 @@ end;
 % Adding the first columns of ones
 R_ones     = ones(length(R_mat),1);
 R_mat      = [R_ones R_mat];
-R_pad      = zeros(numofprev_win,min(size(R_mat)));
-for i=1:2
-    for j=1:no_of_channels_ECOG
-         R_idx1 = (j-1)* numoffeat * numofprev_win + 1;
-            R_idx2 = R_idx1 + numoffeat * numofprev_win - 1;
-            R_pad(i+1, R_idx1:R_idx2) = reshape(Feat_Mat{j}(curr_pt - 3:curr_pt - 1, :)', [1, 18]);
-    end
+R_pad      = zeros(numofprev_win,min(size(R_mat))-1);
+
+% Pad
+%# position 2
+
+for j=1:no_of_channels_ECOG
+        % Prev window (-1) 
+         R_idx1 = ((j-1)* numoffeat * numofprev_win + 13);
+         R_idx2 = R_idx1 + numoffeat - 1;
+         R_pad(2, R_idx1:R_idx2) = Feat_Mat{j}(1,:);
 end
+
+%# position 3
+
+for j=1:no_of_channels_ECOG
+        % Prev window (-2) 
+         R_idx1 = (j-1)* numoffeat * numofprev_win + 7;
+         R_idx2 = R_idx1 +(numoffeat * (numofprev_win-1))-1;
+         R_pad(3, R_idx1:R_idx2) = reshape(Feat_Mat{j}(1:2, :)', [1, 12]);
+end
+ R_pad_ones=ones(3,1);
+ R_pad=[R_pad_ones R_pad];
+ R_matrix=zeros(NoW,min(size(R_mat)));
+ R_matrix(1:3,:)=R_pad;
+ R_matrix(4:6199,:)=R_mat;
 
 % Weights and prediction for each finger
 
 for i = 1:5
-    f{i}    = mldivide(R_mat'*R_mat, R_mat' * Glovedata_Sub1_ds{i}(2:end));
-    pred{i} = R_mat*f{i};
+    f{i}    = mldivide(R_matrix'*R_matrix, R_matrix' * Glovedata_Sub1_ds{i}(2:end));
+    pred{i} = R_matrix*f{i};
 end
 
 
+% Might have to write a for loop to upsample the prediction
+
+durationInUSec = sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getDuration;
+
+
+time = 1:1/fs_Sub1:310000;
+time = decimate(time, 50);
+time = time(2:end);
+
+for i=1:5
+pred_UpSamp(i,:) = spline(time, pred{i});
+end
+
+Testing_Correlation = corr(Glovedata_Sub1_ds, pred_UpSamp);
+
+%%
+
+% spline interpolation
+
+% the interpolation isnt working yet..needs work
+
+       
+    dt = 1/50;
+    x = (1:length(pred{1}));
+    xx = (dt:dt:6199);
+    
+    pred_upsample = zeros(310000,5);
+    
+    for i = 1:5
+
+        pred_upsample(i,:) = spline(x,... 
+            [pred{i}(1,1) pred{i}(:,1) pred{i}(end,1)], xx);
+
+    end
+   
+    
