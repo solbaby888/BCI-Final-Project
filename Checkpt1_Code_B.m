@@ -189,7 +189,7 @@ end
 
 for i = 1:5
     f{i}         = mldivide(R_matrix'*R_matrix, R_matrix' * Glovedata_Sub1_ds{i}(2:end));
-    pred_sub1{i} = R_matrix*f{i};
+    pred{i} = R_matrix*f{i};
 end
 
 % spline interpolation
