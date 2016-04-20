@@ -133,9 +133,12 @@ end;
 
 SR_dataglove        = sesh_sub1_2.data(1).sampleRate;
 for i = 1:5;
-    decimate(Glovedata_Sub1{i},  50/(SR_dataglove*10^-3));
+    Glovedata_Sub1_ds{i}  =  round(decimate(Glovedata_Sub1{i},  50)); 
 end;
 
+% WARNING: may want to remove rounding. Ignoring 1st point of decimate
+
+% /(SR_dataglove*10^-3)
 % Linear Regression Prediction
 numoffeat       = 6;
 numofprev_win   = 3;
@@ -157,11 +160,19 @@ end;
 % Adding the first columns of ones
 R_ones     = ones(length(R_mat),1);
 R_mat      = [R_ones R_mat];
+R_pad      = zeros(numofprev_win,min(size(R_mat)));
+for i=1:2
+    for j=1:no_of_channels_ECOG
+         R_idx1 = (j-1)* numoffeat * numofprev_win + 1;
+            R_idx2 = R_idx1 + numoffeat * numofprev_win - 1;
+            R_pad(i+1, R_idx1:R_idx2) = reshape(Feat_Mat{j}(curr_pt - 3:curr_pt - 1, :)', [1, 18]);
+    end
+end
 
 % Weights and prediction for each finger
-first_epoch = 1; % WARNING: prob need to change
+
 for i = 1:5
-    f{i}    = mldivide(R_mat'*R_mat, R_mat' * Glovedata_Sub1{i}(first_epoch:end));
+    f{i}    = mldivide(R_mat'*R_mat, R_mat' * Glovedata_Sub1_ds{i}(2:end));
     pred{i} = R_mat*f{i};
 end
 
