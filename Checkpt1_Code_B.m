@@ -183,59 +183,32 @@ end
  R_pad=[R_pad_ones R_pad];
  R_matrix=zeros(NoW,min(size(R_mat)));
  R_matrix(1:3,:)=R_pad;
- R_matrix(4:6199,:)=R_mat;
+ R_matrix(4:end,:)=R_mat;
 
 % Weights and prediction for each finger
 
 for i = 1:5
-    f{i}    = mldivide(R_matrix'*R_matrix, R_matrix' * Glovedata_Sub1_ds{i}(2:end));
-    pred{i} = R_matrix*f{i};
+    f{i}         = mldivide(R_matrix'*R_matrix, R_matrix' * Glovedata_Sub1_ds{i}(2:end));
+    pred_sub1{i} = R_matrix*f{i};
 end
 
-
-% % Might have to write a for loop to upsample the prediction
-% 
-% durationInUSec = sesh_sub1_1.data(1).rawChannels(1).get_tsdetails.getDuration;
-% 
-% 
-% time = 1:1/fs_Sub1:310000;
-% time = decimate(time, 50);
-% time = time(2:end);
-% 
-% for i=1:5
-% pred_UpSamp(i,:) = spline(time, pred{i});
-% end
-% 
-% Testing_Correlation = corr(Glovedata_Sub1_ds, pred_UpSamp);
-
-%%
-
 % spline interpolation
+%# the interpolation isnt working yet..needs work
+x = (overlap*fs_Sub1:overlap*fs_Sub1:L-overlap*fs_Sub1);
+xx = (1:1:L);
 
-% the interpolation isnt working yet..needs work
+pred_upsample = [];
 
-       
-    dt = 1/50;
-    x = (1:length(pred{1}));
-    xx = (dt:dt:6199);
-    
-   % pred_upsample = zeros(310000,5);
-    
-    for i = 1:5
-
-        pred_upsample(:,i) = spline(x,pred{i}, xx);
-
-    end
+for i = 1:5
+    pred_upsample(:,i) = spline(x,pred{i}, xx);
+end
    
-    pred_upsample_pad=zeros(50,5);
-    pred_final=zeros(nr,5);
-    pred_final(1:50,:)=pred_upsample_pad;
-    pred_final(51:end,:)=pred_upsample;
-    
-    for i = 1:5
+for i = 1:5;
 
-       Glovedata_mat_Sub1(:,i) = Glovedata_Sub1{i};
+   Glovedata_mat_Sub1(:,i) = Glovedata_Sub1{i};
 
-    end
+end;
+
+Training_Correlation = corr(Glovedata_mat_Sub1(:,1), round(pred_upsample(:,1)));
     
-    Testing_Correlation = corrcoef(Glovedata_mat_Sub1, pred_final);
+% need to find average testing corellation over 4 fingers per subject
